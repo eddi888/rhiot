@@ -256,8 +256,8 @@ project including the gateway core dependency:
 
     <dependencies>
       <dependency>
-        <groupId>com.github.camel-labs</groupId>
-        <artifactId>camel-labs-iot-gateway</artifactId>
+        <groupId>io.rhiot</groupId>
+        <artifactId>rhiot-gateway</artifactId>
         <version>0.1.1</version>
       </dependency>
     </dependencies>
@@ -735,7 +735,7 @@ following command:
     GOOGLE_OAUTH_CLIENT_ID=foo.apps.googleusercontent.com \
     GOOGLE_OAUTH_CLIENT_SECRET=yourSecret \
     GOOGLE_OAUTH_REDIRECT_URI=http://myapp.com \
-      bash <(curl -s https://raw.githubusercontent.com/rhiot/rhiot/master/iot/cloudlet/deployment/rhiot-cloud.sh)
+      bash <(curl -s https://raw.githubusercontent.com/rhiot/rhiot/master/cloudlets/deployment/rhiot-cloud.sh)
 
 The script above installs the proper version of Docker server. Keep in mind that the minimal Docker version required by
 Rhiot Cloud is 1.7.1 - if the older version of the Docker is installed, our script will upgrade your Docker server. After
@@ -747,7 +747,7 @@ environment variable:
 
     HTTP_PORT=80 \
       ...
-      bash <(curl -s https://raw.githubusercontent.com/rhiot/rhiot/master/iot/cloudlet/deployment/rhiot-cloud.sh)
+      bash <(curl -s https://raw.githubusercontent.com/rhiot/rhiot/master/cloudlets/deployment/rhiot-cloud.sh)
 
 Environment variables starting with `GOOGLE_OAUTH` prefix are used to configure the Google OAuth authentication
 used by the Cloudlet Console. You have to create the Google application in the
@@ -760,18 +760,36 @@ volume container. If such volume doesn't exist, Rhiot Cloud script will create i
 
 ### Device management cloudlet
 
+The foundation of the every IoT solution is the device management system. Without the centralized coordination of your
+*things*, you can't properly orchestrate how your devices communicates with each other. Also the effective monitoring of
+the IoT system, without the devices registered in the centralized cloud, becomes almost impossible.
+
 Device management cloudlet provides backend service for registering and tracking devices connected to the Rhiot Cloud.
 Under the hood device management cloudlet uses [Eclipse Leshan](https://projects.eclipse.org/projects/iot.leshan), the
-open source implementation of the [LWM2M](https://en.wikipedia.org/wiki/OMA_LWM2M) protocol.
+open source implementation of the [LWM2M](https://en.wikipedia.org/wiki/OMA_LWM2M) protocol. LWM2M becomes the standard
+for the IoT devices management so we decided to make it a heart of the Rhiot device management service.
+
+#### Running the device management cloudlet
 
 The device management cloudlet is distributed as a fat jar. Its Maven coordinates are
 `io.rhiot/rhiot-cloudlet-device/0.1.1`. The dockerized artifact is available in Docker Hub as
-[rhiot/cloudlet-device:0.1.1](https://hub.docker.com/r/rhiot/cloudlet-device).
+[rhiot/cloudlet-device:0.1.1](https://hub.docker.com/r/rhiot/cloudlet-device). In order to start the device management
+microservice, just run it as a fat jar...
+
+    java -jar cloudlet-device:0.1.1.jar
+
+...or as the Docker container...
+
+    docker run -d io.rhiot/rhiot-cloudlet-device/0.1.1
 
 #### Device management REST API
 
 The device management cloudlet exposes REST API that can be used to work with the devices. By default the device
-management REST API is exposed using the following base URI - `http:0.0.0.0:15000`.
+management REST API is exposed using the following base URI - `http:0.0.0.0:15000`. You can change the port of the
+REST API using the `api_rest_port` environment variable. For example the snippet below exposes the REST API on the port
+16000:
+
+    docker run -d -e api_rest_port=16000 -p 16000:16000 io.rhiot/rhiot-cloudlet-device/0.1.1
 
 To list the devices send the `GET` request to the following URL `http:localhost:15000/device`. You should receive
 response similar to the following JSON:
@@ -784,7 +802,7 @@ response similar to the following JSON:
       "lifeTimeInSec":86400,
       "lwM2mVersion":"1.0",
       "bindingMode":"U",
-      "endpoint":"f4650db1-01e7-49e0-a8d7-da6217213907",
+      "endpoint":"myFancyDevice",
       "registrationId":"7OjdvHCVUb",
       "objectLinks":[{"url":"/",
         "attributes":{"rt":"oma.lwm2m"},
@@ -798,6 +816,11 @@ that have not send the heartbeat signal to the device management cloudlet for th
 default). The list will be formatted as the JSON document similar to the following one:
 
     {"disconnectedDevices": ["device1", "device2", ...]}
+
+The disconnection period can be changed globally using the `disconnectionPeriod` environment variable indicating the
+disconnection period value in miliseconds. For example the snippet below sets the disconnection period to 20 seconds:
+
+    docker run -d -e disconnectionPeriod=20000 io.rhiot/rhiot-cloudlet-device/0.1.1
 
 #### Device registry
 

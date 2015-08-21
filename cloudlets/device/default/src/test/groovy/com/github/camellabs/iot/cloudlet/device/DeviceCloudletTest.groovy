@@ -51,7 +51,7 @@ class DeviceCloudletTest extends Assert {
                 .build();
         MongodStarter.getDefaultInstance().prepare(mongodConfig).start()
 
-        System.setProperty('camellabs_iot_cloudlet_device_api_rest_port', "${restApiPort}")
+        System.setProperty('api_rest_port', "${restApiPort}")
         System.setProperty('disconnectionPeriod', "${5000}")
 
         new DeviceCloudlet().start()
@@ -60,7 +60,7 @@ class DeviceCloudletTest extends Assert {
 
     @Test
     void shouldReturnNoClients() {
-        rest.delete(apiBase + '/client')
+        rest.delete("${apiBase}/client")
         def response = rest.getForObject(new URI("http://localhost:${restApiPort}/device"), Map.class)
         assertEquals(0, response['devices'].asType(List.class).size())
     }
@@ -68,10 +68,10 @@ class DeviceCloudletTest extends Assert {
     @Test
     void shouldReturnVirtualClient() {
         // Given
-        rest.delete(apiBase + '/client')
+        rest.delete("${apiBase}/client")
 
         // When
-        rest.postForLocation(apiBase + '/client', new TestVirtualDevice(clientId: uuid()))
+        rest.postForLocation("${apiBase}/client", new TestVirtualDevice(clientId: uuid()))
         def response = rest.getForObject(apiBase + '/device', Map.class)
 
         // Then
@@ -79,9 +79,25 @@ class DeviceCloudletTest extends Assert {
     }
 
     @Test
+    void shouldSendHeartbeatToVirtualDevice() {
+        // Given
+        rest.delete("${apiBase}/client")
+        def deviceId = uuid()
+        rest.postForLocation("${apiBase}/client", new TestVirtualDevice(clientId: deviceId))
+        sleep(5000)
+
+        // When
+        rest.getForEntity(apiBase + "/device/${deviceId}/heartbeat", Map.class)
+
+        // Then
+        def response = rest.getForObject(apiBase + '/device/disconnected', Map.class)
+        assertEquals(0, response['disconnectedDevices'].asType(List.class).size())
+    }
+
+    @Test
     void shouldNotRegisterClientTwice() {
         // Given
-        rest.delete(apiBase + '/client')
+        rest.delete("${apiBase}/client")
         def firstClient = 'foo'
         def secondClient = 'bar'
 
@@ -102,7 +118,7 @@ class DeviceCloudletTest extends Assert {
         createGenericLeshanClientTemplate(clientId).connect()
 
         // When
-        def client = rest.getForObject(new URI("http://localhost:${restApiPort}/client/${clientId}"), Map.class)
+        def client = rest.getForObject("${apiBase}/client/${clientId}", Map.class)
 
         // Then
         assertEquals(clientId, client['client']['endpoint'])
@@ -111,7 +127,7 @@ class DeviceCloudletTest extends Assert {
     @Test
     void shouldListDisconnectedClient() {
         // Given
-        rest.delete(apiBase + '/client')
+        rest.delete("${apiBase}/client")
         def clientId = randomUUID().toString()
         createGenericLeshanClientTemplate(clientId).connect()
 
@@ -126,7 +142,7 @@ class DeviceCloudletTest extends Assert {
     @Test
     void shouldNotListDisconnectedClient() {
         // Given
-        rest.delete(new URI("http://localhost:${restApiPort}/client"))
+        rest.delete("${apiBase}/client")
         def clientId = randomUUID().toString()
         createGenericLeshanClientTemplate(clientId).connect()
 

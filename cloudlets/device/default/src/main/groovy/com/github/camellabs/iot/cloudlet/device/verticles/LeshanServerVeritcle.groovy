@@ -29,6 +29,7 @@ import org.eclipse.leshan.core.response.LwM2mResponse
 import org.eclipse.leshan.core.response.ValueResponse
 import org.eclipse.leshan.server.californium.LeshanServerBuilder
 import org.eclipse.leshan.server.californium.impl.LeshanServer
+import org.eclipse.leshan.server.client.ClientUpdate
 import org.infinispan.configuration.cache.Configuration
 import org.infinispan.configuration.cache.ConfigurationBuilder
 import org.infinispan.configuration.global.GlobalConfigurationBuilder
@@ -40,6 +41,7 @@ import java.time.temporal.ChronoUnit
 
 import static com.github.camellabs.iot.cloudlet.device.client.LeshanClientTemplate.createVirtualLeshanClientTemplate
 import static com.github.camellabs.iot.vertx.PropertyResolver.intProperty
+import static com.github.camellabs.iot.vertx.PropertyResolver.longProperty
 import static com.github.camellabs.iot.vertx.PropertyResolver.stringProperty
 import static com.github.camellabs.iot.vertx.jackson.Jacksons.json
 import static com.github.camellabs.iot.vertx.jackson.Jacksons.jsonMessageToMap
@@ -58,6 +60,8 @@ class LeshanServerVeritcle extends GroovyVerticle {
 
     static final def CHANNEL_DEVICES_DISCONNECTED = 'devices.disconnected'
 
+    static final def CHANNEL_DEVICE_HEARTBEAT_SEND = 'device.heartbeat.update'
+
     // Collaborators
 
     final def LeshanServer leshanServer
@@ -68,7 +72,7 @@ class LeshanServerVeritcle extends GroovyVerticle {
 
     final def registryMongoDbPort = intProperty('mongodb_port', 27017)
 
-    final def disconnectionPeriod = intProperty('disconnectionPeriod', DEFAULT_DISCONNECTION_PERIOD.intValue())
+    final def disconnectionPeriod = longProperty('disconnectionPeriod', DEFAULT_DISCONNECTION_PERIOD)
 
     LeshanServerVeritcle() {
         def mongoHost = registryMongoDbHost == null ? 'localhost' : registryMongoDbHost
@@ -113,6 +117,22 @@ class LeshanServerVeritcle extends GroovyVerticle {
 
             vertx.eventBus().consumer('getClient') { msg ->
                 wrapIntoJsonResponse(msg, 'client', leshanServer.clientRegistry.get(msg.body().toString()))
+            }
+
+            vertx.eventBus().consumer(CHANNEL_DEVICE_HEARTBEAT_SEND) { msg ->
+                if(msg == null) {
+                    msg.fail(-1, 'Device ID cannot be null.')
+                    return
+                }
+                def deviceId = msg.body().toString()
+                def client = leshanServer.clientRegistry.get(deviceId)
+                if(client == null) {
+                    msg.fail(-1, "No device with id ${deviceId}.")
+                } else {
+                    leshanServer.clientRegistry.updateClient(new ClientUpdate(client.registrationId, client.address, client.port, client.lifeTimeInSec, client.smsNumber,
+                            client.bindingMode, client.objectLinks))
+                    wrapIntoJsonResponse(msg, 'status', 'success')
+                }
             }
 
             vertx.eventBus().consumer('client.manufacturer') { msg ->
