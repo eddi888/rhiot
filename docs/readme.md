@@ -1,17 +1,15 @@
 # Rhiot - the messaging platform for the Internet Of Things
 
-<a href="https://github.com/rhiot/rhiot"><img src="../rhiot.png" align="left" height="80" hspace="30"></a>
+<a href="https://github.com/rhiot/rhiot"><img src="../rhiot.png" align="left" height="280" hspace="30"></a>
 Rhiot is the messaging platform for the Internet Of Things. We are focused on the adoption of the
 [Red Hat JBoss middleware portfolio](http://www.redhat.com/en/technologies/jboss-middleware) to provide the solutions to
 the common IoT-related challenges.
 
-<br>
-
 Rhiot comes with the following features:
 - [IoT gateway software](https://github.com/rhiot/rhiot/blob/master/docs/readme.md#camel-iot-gateway)
 - [Camel components for the IoT](https://github.com/rhiot/rhiot/blob/master/docs/readme.md#camel-iot-components)
-- [Backend cloud services (Cloudlets)](https://github.com/rhiot/rhiot/blob/master/docs/readme.md#cloudlets)
-- Web console for managing the devices, gateways and Cloudlets
+- [Backend cloud services (Rhiot Cloud)](https://github.com/rhiot/rhiot/blob/master/docs/readme.md#rhiot-cloud)
+- [Web console for managing the devices, gateways and Cloudlets](https://github.com/rhiot/rhiot/blob/master/docs/readme.md#rhiot-cloud)
 - IoT deployment utilities
 - [Performance Testing Framework for the IoT gateways](https://github.com/rhiot/rhiot/blob/master/docs/readme.md#performance-testing-framework)
 
@@ -74,7 +72,14 @@ Rhiot comes with the following features:
 - [Rhiot Cloud](#rhiot-cloud)
   - [Dockerized Rhiot Cloud](#dockerized-rhiot-cloud)
   - [Device management cloudlet](#device-management-cloudlet)
+    - [Running the device management cloudlet](#running-the-device-management-cloudlet)
     - [Device management REST API](#device-management-rest-api)
+      - [Listing devices](#listing-devices)
+      - [Disconnected devices](#disconnected-devices)
+    - [Device management web UI](#device-management-web-ui)
+      - [Listing devices](#listing-devices-1)
+      - [Sending heartbeat to the device](#sending-heartbeat-to-the-device)
+    - [Device registry](#device-registry)
 - [Performance Testing Framework](#performance-testing-framework)
   - [Hardware profiles](#hardware-profiles)
     - [Raspberry PI 2 B+ (aka RPI2)](#raspberry-pi-2-b-aka-rpi2)
@@ -791,6 +796,8 @@ REST API using the `api_rest_port` environment variable. For example the snippet
 
     docker run -d -e api_rest_port=16000 -p 16000:16000 io.rhiot/rhiot-cloudlet-device/0.1.1
 
+##### Listing devices
+
 To list the devices send the `GET` request to the following URL `http:localhost:15000/device`. You should receive
 response similar to the following JSON:
 
@@ -810,6 +817,12 @@ response similar to the following JSON:
         ...],
       "alive":true}]}
 
+##### Disconnected devices
+
+Devices registered in the Rhiot cloud can be in the *connected* or *disconnected* status. Connected devices can exchange
+messages with the cloud, while disconnected can't. Disconnection usually occurs when device temporarily lost the network
+connectivity.
+
 To return the list of identifiers of the disconnected devices send the `GET` request to the following URL -
 `http:localhost:15000/device/disconnected`. In the response you will receive the list of the identifiers of the devices
 that have not send the heartbeat signal to the device management cloudlet for the given *disconnection period* (one minute by
@@ -822,6 +835,44 @@ disconnection period value in miliseconds. For example the snippet below sets th
 
     docker run -d -e disconnectionPeriod=20000 io.rhiot/rhiot-cloudlet-device/0.1.1
 
+The device which is running and operational should periodically send the hearbeat signal to the device cloudlet in order to avoid
+being marked as disconnected. You can do it be sending the GET request to the
+`http:localhost:15000/device/myDeviceId/heartbeat` URI. If the heartbeat has been successfully send to the cloud,
+you will receive the HTTP response similar to the following one:
+
+    {"status": "success"}
+
+#### Device management web UI
+
+Rhiot Cloudlet Console comes with the web interface on the top of the device management REST API. The web UI makes it easier
+to monitor and manage your devices using the web brower, the mobile phone or the tablet.
+
+##### Listing devices
+
+To list the devices
+using the cloudlet console navigate to the `Devices` tab. You will see the list of the devices registered to the
+device management cloudlet. Devices with the icon representing white (empty) heart are the disconnected ones.
+
+<img src="images/console-device-list.png" align="center" height="400" hspace="30">
+
+##### Sending heartbeat to the device
+
+In order to send heartbeat message to the given device and make it visible as connected again, you can use the
+`Send heartbeat` button near the device's' icon.
+
+<img src="images/console-device-heartbeat.png" align="center" height="400" hspace="30">
+
+#### Accessing LWM2M server directly
+
+While we suggest to use the universal REST API whenever possible, you can also consider using the LWM2M server directly.
+By default the LWM2M server is exposed using the default IANA port i.e. 5683. The embedded LWM2M server is started
+together with the cloudlet.
+
+In order to use custom LWM2M server port, set the `lwm2m_port` environment variable when starting the device
+management cloudlet (or Rhiot Cloud). For example:
+
+    docker run -d -e lwm2m_port=16000 io.rhiot/rhiot-cloudlet-device/0.1.1
+
 #### Device registry
 
 Device registry is used by Leshan to store the information about the managed devices. By default the device cloudlet uses
@@ -829,6 +880,28 @@ the MongoDB registry. If environment variables `mongodb_host` are no specified, 
 connect to the `mongodb` and `localhost` hosts respectively, using default MongoDB port (`27017`) or the one specified by
 the `mongodb_port` environment variable.
 
+##### Registry cache
+
+As the access to the device information is crucial for all the IoT systems, it should have be implemented as efficiently
+as possible. As devices information doesn't change very often, it is a good candidate for being cached. Device
+Management Cloudlet uses the [Infinispan](http://infinispan.org) cache cluster under to hood, to provide the faster access
+to the device information. The Infinispan cache used is clustered (using JGroups under the hood), so the cached information
+remains up-to-date even when many Device Manager Cloudlets instances are executed in the cluster.
+
+#### Clustering Device Management Cloudlet
+
+Device Management Cloudlet has been designed with the scalablity in mind. Default configuration of the cloudlet allows
+you to run it in the cluster, behind the load balancer of your choice. The default MongoDB device registry will be
+shared by all the cloudlet instances in the cluster. Also the device registry cache used internally by Device Management Cloudlet
+will be automatically synchronized between the deployed cloudlet instances. All you need to do, is to be sure that you have
+multicast enabled for your local network, so the JGroups cluster can be established between the cloudlets instances.
+
+Keep in mind that each clustered instance of the Device Management Cloudlet exposes both REST and LWM2M API, so you can
+take advantage of load balancing over all the APIs available.
+
+### Geofencing cloudlet
+
+Geofencing cloudlet provides backend cloud service for collecting and the basic analysis of the GPS data.
 
 ## Performance Testing Framework
 

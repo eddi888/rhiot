@@ -28,6 +28,7 @@
         <camel-labs.version>0.1.1-SNAPSHOT</camel-labs.version>
         <embedmongo.version>1.48.2</embedmongo.version>
         <google-maps-services.version>0.1.7</google-maps-services.version>
+        <google-truth.version>0.27</google-truth.version>
         <infinispan.version>8.0.0.Beta2</infinispan.version>
         <ivy.version>2.4.0</ivy.version>
         <jcabi-aether.version>0.10.1</jcabi-aether.version>
@@ -76,7 +77,6 @@
                 <groupId>com.github.camel-labs</groupId>
                 <artifactId>camel-labs-iot-cloudlet-document-default</artifactId>
                 <version>${camel-labs.version}</version>
-                <classifier>classes</classifier>
             </dependency>
             <dependency>
                 <groupId>com.github.camel-labs</groupId>
@@ -84,8 +84,8 @@
                 <version>${camel-labs.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.github.camel-labs</groupId>
-                <artifactId>camel-labs-iot-cloudlet-geofencing</artifactId>
+                <groupId>io.rhiot</groupId>
+                <artifactId>rhiot-cloudlet-geofencing</artifactId>
                 <version>${camel-labs.version}</version>
             </dependency>
             <dependency>
@@ -127,6 +127,28 @@
                 <groupId>com.google.maps</groupId>
                 <artifactId>google-maps-services</artifactId>
                 <version>${google-maps-services.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.truth</groupId>
+                <artifactId>truth</artifactId>
+                <version>${google-truth.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.jcabi</groupId>
+                <artifactId>jcabi-aether</artifactId>
+                <version>${jcabi-aether.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <!-- Fat jar optimization. We don't need 9 MB of AWS-related code. -->
+                        <artifactId>aws-java-sdk</artifactId>
+                        <groupId>com.amazonaws</groupId>
+                    </exclusion>
+                    <exclusion>
+                        <!-- Optional dependency. Excluding as it writes to STDERR and pollutes the application output. -->
+                        <groupId>org.hibernate</groupId>
+                        <artifactId>hibernate-validator</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>com.jcraft</groupId>
@@ -237,6 +259,11 @@
                 <version>${apache-poi.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.eclipse.californium</groupId>
+                <artifactId>californium-core</artifactId>
+                <version>${californium-core.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.eclipse.kura</groupId>
                 <artifactId>org.eclipse.kura.linux.net</artifactId>
                 <version>${kura.version}</version>
@@ -255,11 +282,6 @@
                 <groupId>org.eclipse.kura</groupId>
                 <artifactId>org.eclipse.kura.core</artifactId>
                 <version>${kura.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.eclipse.californium</groupId>
-                <artifactId>californium-core</artifactId>
-                <version>${californium-core.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.eclipse.leshan</groupId>
@@ -281,23 +303,6 @@
                 <groupId>org.infinispan</groupId>
                 <artifactId>infinispan-core</artifactId>
                 <version>${infinispan.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.jcabi</groupId>
-                <artifactId>jcabi-aether</artifactId>
-                <version>${jcabi-aether.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <!-- Fat jar optimization. We don't need 9 MB of AWS-related code. -->
-                        <artifactId>aws-java-sdk</artifactId>
-                        <groupId>com.amazonaws</groupId>
-                    </exclusion>
-                    <exclusion>
-                        <!-- Optional dependency. Excluding as it writes to STDERR and pollutes the application output. -->
-                        <groupId>org.hibernate</groupId>
-                        <artifactId>hibernate-validator</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.jfree</groupId>

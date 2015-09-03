@@ -19,26 +19,34 @@ package io.rhiot.utils
 import org.junit.Assert
 import org.junit.Test
 
+import static com.google.common.truth.Truth.assertThat
 import static io.rhiot.utils.Networks.MIN_PORT_NUMBER
 import static io.rhiot.utils.Networks.findAvailableTcpPort
 import static io.rhiot.utils.Networks.isReachable
+import static io.rhiot.utils.Networks.currentLocalNetworkIp
 import static java.lang.System.currentTimeMillis
+import static java.util.concurrent.TimeUnit.SECONDS
 
 class NetworksTest extends Assert {
 
     @Test
     void shouldReturnAvailablePort() {
-        assertTrue(findAvailableTcpPort() > MIN_PORT_NUMBER)
+        assertThat(findAvailableTcpPort()).isGreaterThan(MIN_PORT_NUMBER)
     }
 
     @Test
     void shouldReachHost() {
-        assertTrue(isReachable('rhiot.io'))
+        assertThat(isReachable('rhiot.io', (int) SECONDS.toMillis(10))).isTrue()
     }
 
     @Test
     void shouldNotReachHost() {
-        assertFalse(isReachable("someReallyCrazyHostName${currentTimeMillis()}"))
+        assertThat(isReachable("someUnreachableHostName${currentTimeMillis()}")).isFalse()
+    }
+
+    @Test
+    void shouldReturnCurrentLocalNetworkIp() {
+        assertThat(currentLocalNetworkIp()).isNotNull()
     }
 
 }

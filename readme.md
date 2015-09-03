@@ -1,6 +1,6 @@
 # Rhiot - the messaging platform for the Internet Of Things
 
-<a href="https://github.com/rhiot/rhiot"><img src="rhiot.png" align="left" height="80" hspace="30"></a>
+<a href="https://github.com/rhiot/rhiot"><img src="rhiot.png" align="left" height="280" hspace="30"></a>
 Rhiot is the messaging platform for the Internet Of Things. We are focused on the adoption of the
 [Red Hat JBoss middleware portfolio](http://www.redhat.com/en/technologies/jboss-middleware) to provide the solutions to
 the common IoT-related challenges.
@@ -8,8 +8,8 @@ the common IoT-related challenges.
 Rhiot comes with the following features:
 - [IoT gateway software](https://github.com/rhiot/rhiot/blob/master/docs/readme.md#camel-iot-gateway)
 - [Camel components for the IoT](https://github.com/rhiot/rhiot/blob/master/docs/readme.md#camel-iot-components)
-- [Backend cloud services (Cloudlets)](https://github.com/rhiot/rhiot/blob/master/docs/readme.md#cloudlets)
-- Web console for managing the devices, gateways and Cloudlets
+- [Backend cloud services (Rhiot Cloud)](https://github.com/rhiot/rhiot/blob/master/docs/readme.md#rhiot-cloud)
+- [Web console for managing the devices, gateways and Cloudlets](https://github.com/rhiot/rhiot/blob/master/docs/readme.md#rhiot-cloud)
 - IoT deployment utilities
 - [Performance Testing Framework for the IoT gateways](https://github.com/rhiot/rhiot/blob/master/docs/readme.md#performance-testing-framework)
 
@@ -57,13 +57,6 @@ All you need to build the project is Maven 3 and Java 8 JDK
 ## Build status
 
 [![Build Status](https://travis-ci.org/rhiot/rhiot.svg?branch=master)](https://travis-ci.org/rhiot/rhiot)
-
-## Rhiot compatibility matrix
-
-| Rhiot | Apache Camel | Release date |
-|--------------|-----------|--------------|
-| 0.1.0 |2.15.2| 2015-06-02 |
-| 0.1.1-SNAPSHOT |2.15.2| TBD |
 
 ## License
 

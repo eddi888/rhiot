@@ -14,6 +14,7 @@
         <module>utils-ssh</module>
         <module>vertx</module>
         <module>gateway</module>
+        <module>gateway-app</module>
         <module>cloudlets</module>
         <module>iot</module>
     </modules>
@@ -301,7 +302,7 @@
                             <image>
                                 <name>rhiot/${docker.image.target}</name>
                                 <build>
-                                    <from>hekonsek/fatjar:0.0.14-SNAPSHOT</from>
+                                    <from>rhiot/fatjar:0.1.1-SNAPSHOT</from>
                                     <tags>
                                         <tag>latest</tag>
                                         <tag>${project.version}</tag>
