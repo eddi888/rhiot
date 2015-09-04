@@ -14,23 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.camellabs.iot.vertx.jackson
+package io.rhiot.steroids
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import io.vertx.core.json.Json
+class MyConfigurationCallback implements ConfigurationCallback {
 
-import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL
-
-final class Jacksons {
-
-    private final static def JSON = Json.mapper.setSerializationInclusion(NON_NULL)
-
-    static ObjectMapper json() {
-        JSON
-    }
-
-    static Map jsonMessageToMap(Object jsonMessage) {
-        json().readValue(jsonMessage.toString(), Map.class)
-    }
+    @Override
+    void configureMe() {}
 
 }

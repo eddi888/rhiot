@@ -28,7 +28,7 @@ import io.vertx.groovy.ext.web.handler.CorsHandler
 import io.vertx.lang.groovy.GroovyVerticle
 
 import static com.github.camellabs.iot.vertx.PropertyResolver.intProperty
-import static com.github.camellabs.iot.vertx.jackson.Jacksons.json
+import static io.rhiot.vertx.jackson.Jacksons.json
 import static io.vertx.core.http.HttpMethod.DELETE
 import static io.vertx.core.http.HttpMethod.GET
 import static io.vertx.core.http.HttpMethod.OPTIONS
@@ -48,6 +48,8 @@ abstract class BaseRestApiVerticle extends GroovyVerticle {
         vertx.runOnContext {
             http = vertx.createHttpServer()
             router = router(vertx)
+
+            router.route().handler(new HttpRequestInterceptorHandler())
 
             router.route().handler(CorsHandler.create('*').
                     allowedMethod(GET).allowedMethod(OPTIONS).allowedHeader('Authorization'))
