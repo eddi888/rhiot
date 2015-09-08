@@ -14,21 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.camellabs.iot.utils;
+package com.example
 
-import static java.lang.System.setProperty;
+import com.github.camellabs.iot.cloudlet.device.vertx.HttpExchangeInterceptor
+import io.vertx.groovy.ext.web.RoutingContext
 
-public final class Properties {
+class MockHttpExchangeInterceptor implements HttpExchangeInterceptor {
 
-    private Properties() {
-    }
+    static boolean hasBeenCalled
 
-    public static void intProperty(String key, int value) {
-        setProperty(key, value + "");
-    }
-
-    public static void booleanProperty(String key, boolean value) {
-        setProperty(key, value + "");
+    @Override
+    void intercept(RoutingContext routingContext) {
+        hasBeenCalled = true
     }
 
 }

@@ -70,16 +70,22 @@ Rhiot comes with the following features:
       - [Consuming:](#consuming-2)
       - [Producing](#producing-2)
 - [Rhiot Cloud](#rhiot-cloud)
+  - [Architecture](#architecture)
   - [Dockerized Rhiot Cloud](#dockerized-rhiot-cloud)
   - [Device management cloudlet](#device-management-cloudlet)
     - [Running the device management cloudlet](#running-the-device-management-cloudlet)
     - [Device management REST API](#device-management-rest-api)
       - [Listing devices](#listing-devices)
       - [Disconnected devices](#disconnected-devices)
+      - [Intercepting REST API requests](#intercepting-rest-api-requests)
     - [Device management web UI](#device-management-web-ui)
       - [Listing devices](#listing-devices-1)
       - [Sending heartbeat to the device](#sending-heartbeat-to-the-device)
+    - [Accessing LWM2M server directly](#accessing-lwm2m-server-directly)
     - [Device registry](#device-registry)
+      - [Registry cache](#registry-cache)
+    - [Clustering Device Management Cloudlet](#clustering-device-management-cloudlet)
+  - [Geofencing cloudlet](#geofencing-cloudlet)
 - [Performance Testing Framework](#performance-testing-framework)
   - [Hardware profiles](#hardware-profiles)
     - [Raspberry PI 2 B+ (aka RPI2)](#raspberry-pi-2-b-aka-rpi2)
@@ -731,6 +737,16 @@ Console* is the web application assembling all the Cloudlets UI plugins. The *Rh
 complete cloud-based installation setup including Cloudlet Console, Cloudlets backend services and all the other necessary
 services (like database servers) installed.
 
+### Architecture
+
+The high-level architecture diagram of the Rhiot Cloud is presented on the image below:
+
+<img src="images/cloudlet-arch.png" align="center" height="600">
+
+Notice that we assume that cloudlets dockerized and deployed as the Docker containers. The HTTP REST API as been listed
+at the top of the diagram not without the reason - we think of the REST API as the first-class citizen considering the
+access to the Rhiot Cloud.
+
 ### Dockerized Rhiot Cloud
 
 We recommend to run the Rhiot Cloud using the Docker container. We love Docker and believe that containers are the
@@ -773,6 +789,10 @@ Device management cloudlet provides backend service for registering and tracking
 Under the hood device management cloudlet uses [Eclipse Leshan](https://projects.eclipse.org/projects/iot.leshan), the
 open source implementation of the [LWM2M](https://en.wikipedia.org/wiki/OMA_LWM2M) protocol. LWM2M becomes the standard
 for the IoT devices management so we decided to make it a heart of the Rhiot device management service.
+
+The diagram below presents the high-level overview of the device cloudlet architecture.
+
+<img src="images/cloudlet-device-arch.png" align="center" height="600">
 
 #### Running the device management cloudlet
 
@@ -841,6 +861,35 @@ being marked as disconnected. You can do it be sending the GET request to the
 you will receive the HTTP response similar to the following one:
 
     {"status": "success"}
+
+##### Intercepting REST API requests
+
+If you would like to intercept the HTTP communication between the HTTP client and the REST API (for example in order to add the
+security checks), just add your custom implementation of the
+[`HttpExchangeInterceptor`](https://github.com/rhiot/rhiot/blob/c6946a891083a34bb35c123326baa744e070d9d5/cloudlets/device/default/src/main/groovy/com/github/camellabs/iot/cloudlet/device/vertx/HttpExchangeInterceptor.groovy)
+interface to your classpath...
+
+    package com.example
+
+    import com.github.camellabs.iot.cloudlet.device.vertx.HttpExchangeInterceptor
+    import io.vertx.groovy.ext.web.RoutingContext
+
+    class MockHttpExchangeInterceptor implements HttpExchangeInterceptor {
+
+        @Override
+        public void intercept(RoutingContext routingContext) {
+            String token = routingContext.request().getHeader('security_token');
+            if(...) { // token is not valid
+                routingContext.response().end("Invalid security token!");
+            }
+        }
+
+    }
+
+...and set the `application_package` property to the base package of your application. For example for the snippet
+above the base package could be set as follows:
+
+    docker run -d -e application_package=com.example com.example/rhiot-cloudlet-device-customized
 
 #### Device management web UI
 

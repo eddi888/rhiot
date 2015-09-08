@@ -5,12 +5,12 @@
 
     <parent>
         <groupId>io.rhiot</groupId>
-        <artifactId>rhiot-cloudlet-device-parent</artifactId>
+        <artifactId>rhiot-bom</artifactId>
         <version>0.1.1-SNAPSHOT</version>
-        <relativePath>..</relativePath>
+        <relativePath>../bom</relativePath>
     </parent>
 
-    <artifactId>rhiot-cloudlet-device-app</artifactId>
+    <artifactId>rhiot-steroids</artifactId>
 
     <licenses>
         <license>
@@ -19,26 +19,25 @@
         </license>
     </licenses>
 
-    <properties>
-        <fatjar.mainClass>com.github.camellabs.iot.cloudlet.device.DeviceCloudlet</fatjar.mainClass>
-        <docker.image.target>cloudlet-device</docker.image.target>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>io.rhiot</groupId>
-            <artifactId>rhiot-cloudlet-device</artifactId>
+            <artifactId>rhiot-utils</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.reflections</groupId>
+            <artifactId>reflections</artifactId>
         </dependency>
 
         <!-- Testing -->
         <dependency>
-            <groupId>com.google.truth</groupId>
-            <artifactId>truth</artifactId>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>de.flapdoodle.embed</groupId>
-            <artifactId>de.flapdoodle.embed.mongo</artifactId>
+            <groupId>com.google.truth</groupId>
+            <artifactId>truth</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -47,18 +46,5 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.jolokia</groupId>
-                <artifactId>docker-maven-plugin</artifactId>
-            </plugin>
-        </plugins>
-    </build>
 
 </project>
